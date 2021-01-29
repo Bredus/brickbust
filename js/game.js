@@ -22,7 +22,7 @@ window.onload = function() {
 
 var ball;
 var plate;
-var block;
+var blocks;
 var keys;
 var isBallMoving;
 
@@ -53,12 +53,27 @@ class playGame extends Phaser.Scene
     // SPRITES
     ball = this.physics.add.sprite(200,250, 'ball').setScale(0.2);
     plate = this.physics.add.sprite(200, 480, 'ground').setScale(0.1,0.2);
-    block = this.physics.add.sprite(200,50,'ground').setScale(0.1,0.4);
-    
 
+    
+    // block = this.physics.add.sprite(200,50,'ground').setScale(0.1,0.4);
+
+    blocks = this.physics.add.group({
+      key: 'ground',
+      repeat: 2,
+      setXY: {x: 100, y: 50, stepX: 100},
+      setScale: {x:0.1, y:0.4}
+    });
+    
     ball.setImmovable(true);
     plate.setImmovable(true);
-    block.setImmovable(true);
+
+    blocks.getChildren().forEach(function(child){
+      child.setImmovable(true);
+    })
+
+    // block.setImmovable(true);
+
+    this.physics.add.overlap(ball, blocks, this.destroyBlock, null, this);
 
     isBallMoving = false;
   }
@@ -76,10 +91,11 @@ class playGame extends Phaser.Scene
     }
     else
     {
-      // Ball Bounce
-      this.physics.world.collide(ball, plate, this.surfaceBounce, null, this);
-      this.physics.world.collide(ball, block, this.surfaceBounce, null, this);
+      // Ball Bounce:
+      // - PLATE
+      this.physics.world.collide(ball, plate, this.bounce, null, this);
 
+      // - SCREEN BORDERS
       if ((ball.getBounds().left < 0 && ball.body.velocity.x < 0) || (ball.getBounds().right > 400 && ball.body.velocity.x > 0))
       {
         ball.setVelocityX(-ball.body.velocity.x);
@@ -88,15 +104,13 @@ class playGame extends Phaser.Scene
       {
         ball.setVelocityY(-ball.body.velocity.y);
       }
-      //Ball touches bottom bound
+      // - Lower Border
       else if (ball.getBounds().bottom > 500 && ball.body.velocity.y > 0)
       {
-        
         this.scene.start('PlayGame');
       }
 
-
-      // Floor's movement
+      // Plate's movement
       if (keys.A.isDown && plate.getBounds().left > 0)
       {
         plate.setVelocityX(-300);
@@ -113,50 +127,21 @@ class playGame extends Phaser.Scene
 
   }
 
-  surfaceBounce(_ball, surface)
+  bounce(_ball, surface)
   {
     ball.setVelocityY(-ball.body.velocity.y);
-    // if (_object != 0)
-    // {
-      // ball.setVelocityX(_object.body.velocity.x);
-    // }
 
     if (surface == plate)
     {
-      console.log('Hit Plate!');
-    }
-    else{
-      console.log('Hit Block!');
+      if (plate.body.velocity.x != 0)
+        ball.setVelocityX(0.5 * plate.body.velocity.x);
     }
   }
 
+  destroyBlock(_ball, _block)
+  {
+    this.bounce(_ball, _block);
+    _block.disableBody(true, true);
+  }
+
 }
-
-
-
-
-
-
-
-// function preload()
-// {
-//   this.load.image('ball','images/ball.png');
-//   this.load.image('platform','images/ground.png');
-// }
-
-// function create()
-// {
-//   this.ball = this.physics.add.sprite(100, 450, 'ball');
-
-
-
-  
-
-  
-  
-// }
-
-// function update()
-// {
-
-// }
