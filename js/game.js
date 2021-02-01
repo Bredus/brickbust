@@ -21,13 +21,14 @@ window.onload = function() {
 }
 
 // Global variables
-var ball;
-var plate;
+let ball;
+let plate;
 let blocks = [];
-var keys;
-var isBallMoving;
-var score;
-var scoreText;
+let keys;
+let isBallMoving;
+let score;
+let scoreText;
+let bop;
 
 class playGame extends Phaser.Scene
 {
@@ -40,6 +41,7 @@ class playGame extends Phaser.Scene
   {
     this.load.image('ground', 'images/ground.png');
     this.load.image('ball', 'images/ball.png');
+    this.load.audio('bop', ['audio/bong.wav']);
   }
 
   create()
@@ -78,12 +80,14 @@ class playGame extends Phaser.Scene
 
     ball.setImmovable(true);
     plate.setImmovable(true);
-    
+
+    // AUDIO
+    bop = this.sound.add("bop", { loop: false });
+
     // Start game parameters
     isBallMoving = false;
     score = 0;
     this.updateScore(0);
-
   }
 
   update()
@@ -107,10 +111,12 @@ class playGame extends Phaser.Scene
       if ((ball.getBounds().left < 0 && ball.body.velocity.x < 0) || (ball.getBounds().right > 400 && ball.body.velocity.x > 0))
       {
         ball.setVelocityX(-ball.body.velocity.x);
+        bop.play();
       }
       if (ball.getBounds().top < 0 && ball.body.velocity.y < 0)
       {
         ball.setVelocityY(-ball.body.velocity.y);
+        bop.play();
       }
       // - Lower Border
       else if (ball.getBounds().bottom > 500 && ball.body.velocity.y > 0)
@@ -132,7 +138,6 @@ class playGame extends Phaser.Scene
         plate.setVelocityX(0);
       } 
     }
-
   }
 
   bounce(_ball, surface)
@@ -144,6 +149,8 @@ class playGame extends Phaser.Scene
       if (plate.body.velocity.x != 0)
         ball.setVelocityX(0.5 * plate.body.velocity.x);
     }
+
+    bop.play();
   }
 
   destroyBlock(_ball, _block)
