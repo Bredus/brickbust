@@ -20,11 +20,14 @@ window.onload = function() {
   window.focus();
 }
 
+// Global variables
 var ball;
 var plate;
-var blocks;
+let blocks = [];
 var keys;
 var isBallMoving;
+var score;
+var scoreText;
 
 class playGame extends Phaser.Scene
 {
@@ -50,32 +53,37 @@ class playGame extends Phaser.Scene
       D: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
     };
 
-    // SPRITES
+    // SPRITES & OBJECTS
     ball = this.physics.add.sprite(200,250, 'ball').setScale(0.2);
     plate = this.physics.add.sprite(200, 480, 'ground').setScale(0.1,0.2);
 
-    
-    // block = this.physics.add.sprite(200,50,'ground').setScale(0.1,0.4);
+    for (this.i = 0; this.i < 3; this.i++)
+    {
+      blocks[this.i] = this.physics.add.group({
+        key: 'ground',
+        repeat: 2,
+        setXY: {x: 100, y: 50 + this.i * 30, stepX: 100},
+        setScale: {x:0.1, y:0.4}
+      });
 
-    blocks = this.physics.add.group({
-      key: 'ground',
-      repeat: 2,
-      setXY: {x: 100, y: 50, stepX: 100},
-      setScale: {x:0.1, y:0.4}
-    });
+      blocks[this.i].getChildren().forEach(function(child){
+        child.setImmovable(true);
+      })
+
+      this.physics.add.overlap(ball, blocks[this.i], this.destroyBlock, null, this);
+
+    }
     
+    scoreText = this.add.text(10, 10, '');
+
     ball.setImmovable(true);
     plate.setImmovable(true);
-
-    blocks.getChildren().forEach(function(child){
-      child.setImmovable(true);
-    })
-
-    // block.setImmovable(true);
-
-    this.physics.add.overlap(ball, blocks, this.destroyBlock, null, this);
-
+    
+    // Start game parameters
     isBallMoving = false;
+    score = 0;
+    this.updateScore(0);
+
   }
 
   update()
@@ -142,6 +150,12 @@ class playGame extends Phaser.Scene
   {
     this.bounce(_ball, _block);
     _block.disableBody(true, true);
+    this.updateScore(1);
   }
 
+  updateScore(inc)
+  {
+    score += inc;
+    scoreText.text = "Score: " + score;
+  }
 }
