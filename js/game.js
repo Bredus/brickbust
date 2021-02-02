@@ -21,14 +21,30 @@ window.onload = function() {
 }
 
 // Global variables
+// OBJECTs
 let ball;
 let plate;
-let blocks = [];
+let blocks = {
+  group: [],
+  r: 3,
+  c: 3,
+  count: 0
+};
+
+// INPUTs
 let keys;
-let isBallMoving;
+
+// TEXT
 let score;
 let scoreText;
-let bop;
+
+// AUDIO
+let bop = [];
+let yay;
+let ohno;
+
+// GAME MANAGER
+let isBallMoving;
 
 class playGame extends Phaser.Scene
 {
@@ -41,12 +57,15 @@ class playGame extends Phaser.Scene
   {
     this.load.image('ground', 'images/ground.png');
     this.load.image('ball', 'images/ball.png');
-    this.load.audio('bop', ['audio/bong.wav']);
+    this.load.audio('bop', 'audio/bongC.mp3');
+    this.load.audio('bop2', 'audio/bongG.mp3');
+    this.load.audio('yay', 'audio/yay.mp3');
+    this.load.audio('ohno', 'audio/ohno.mp3');
   }
 
   create()
   {
-    // Adding keyboard inputs
+    // INPUTs
     keys = {
       space: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE),
       W: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -56,38 +75,53 @@ class playGame extends Phaser.Scene
     };
 
     // SPRITES & OBJECTS
-    ball = this.physics.add.sprite(200,250, 'ball').setScale(0.2);
-    plate = this.physics.add.sprite(200, 480, 'ground').setScale(0.1,0.2);
+    ball = this.physics.add.sprite(200, 250, 'ball').setScale(0.2);
+    ball.setImmovable(true);
 
-    for (this.i = 0; this.i < 3; this.i++)
+    plate = this.physics.add.sprite(200, 480, 'ground').setScale(0.1,0.2);
+    plate.setImmovable(true);
+
+    blocks.count = blocks.r * blocks.c
+    for (this.i = 0; this.i < blocks.r; this.i++)
     {
-      blocks[this.i] = this.physics.add.group({
+      blocks.group[this.i] = this.physics.add.group({
         key: 'ground',
-        repeat: 2,
+        repeat: blocks.c-1,
         setXY: {x: 100, y: 50 + this.i * 30, stepX: 100},
         setScale: {x:0.1, y:0.4}
       });
 
-      blocks[this.i].getChildren().forEach(function(child){
+      blocks.group[this.i].getChildren().forEach(function(child){
         child.setImmovable(true);
       })
 
-      this.physics.add.overlap(ball, blocks[this.i], this.destroyBlock, null, this);
+      this.physics.add.overlap(ball, blocks.group[this.i], this.destroyBlock, null, this);
 
     }
     
+    // TEXT
     scoreText = this.add.text(10, 10, '');
-
-    ball.setImmovable(true);
-    plate.setImmovable(true);
+    score = 0;
 
     // AUDIO
-    bop = this.sound.add("bop", { loop: false });
+    bop[0] = this.sound.add("bop", { loop: false });
+    bop[1] = this.sound.add("bop2", {loop: false});
+    yay = this.sound.add("yay", {loop: false});
+    ohno = this.sound.add("ohno", {loop: false});
 
-    // Start game parameters
+    // SETUP
     isBallMoving = false;
-    score = 0;
     this.updateScore(0);
+  }
+
+  newGame()
+  {
+
+  }
+
+  newRound()
+  {
+    this.scene.start('PlayGame');
   }
 
   update()
@@ -111,17 +145,17 @@ class playGame extends Phaser.Scene
       if ((ball.getBounds().left < 0 && ball.body.velocity.x < 0) || (ball.getBounds().right > 400 && ball.body.velocity.x > 0))
       {
         ball.setVelocityX(-ball.body.velocity.x);
-        bop.play();
+        bop[0].play();
       }
       if (ball.getBounds().top < 0 && ball.body.velocity.y < 0)
       {
         ball.setVelocityY(-ball.body.velocity.y);
-        bop.play();
+        bop[0].play();
       }
       // - Lower Border
       else if (ball.getBounds().bottom > 500 && ball.body.velocity.y > 0)
       {
-        this.scene.start('PlayGame');
+        this.gameover();
       }
 
       // Plate's movement
@@ -140,6 +174,12 @@ class playGame extends Phaser.Scene
     }
   }
 
+  gameover()
+  {
+    ohno.play();
+    this.scene.start('PlayGame');
+  }
+
   bounce(_ball, surface)
   {
     ball.setVelocityY(-ball.body.velocity.y);
@@ -148,9 +188,10 @@ class playGame extends Phaser.Scene
     {
       if (plate.body.velocity.x != 0)
         ball.setVelocityX(0.5 * plate.body.velocity.x);
-    }
 
-    bop.play();
+      bop[0].play();
+    }
+      
   }
 
   destroyBlock(_ball, _block)
@@ -158,6 +199,17 @@ class playGame extends Phaser.Scene
     this.bounce(_ball, _block);
     _block.disableBody(true, true);
     this.updateScore(1);
+    blocks.count--;
+
+    if (blocks.count == 0)
+    {
+      yay.play();
+      this.newRound();
+    }
+    else
+    {
+      bop[1].play();
+    }
   }
 
   updateScore(inc)
