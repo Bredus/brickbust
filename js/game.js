@@ -26,7 +26,7 @@ let ball;
 let plate;
 let blocks = {
   group: [],
-  r: 3,
+  r: 4,
   c: 3,
   count: 0
 };
@@ -37,6 +37,8 @@ let keys;
 // TEXT
 let score;
 let scoreText;
+let topscore;
+let topscoreText;
 
 // AUDIO
 let bop = [];
@@ -45,6 +47,7 @@ let ohno;
 
 // GAME MANAGER
 let isBallMoving;
+let localStorageName = 'topscore';
 
 class playGame extends Phaser.Scene
 {
@@ -87,7 +90,7 @@ class playGame extends Phaser.Scene
       blocks.group[this.i] = this.physics.add.group({
         key: 'ground',
         repeat: blocks.c-1,
-        setXY: {x: 100, y: 50 + this.i * 30, stepX: 100},
+        setXY: {x: 100, y: 80 + this.i * 30, stepX: 100},
         setScale: {x:0.1, y:0.4}
       });
 
@@ -99,9 +102,11 @@ class playGame extends Phaser.Scene
 
     }
     
-    // TEXT
-    scoreText = this.add.text(10, 10, '');
+    // TEXT / SCORE
     score = 0;
+    topscore = localStorage.getItem(localStorageName) == null ? 0 : localStorage.getItem(localStorageName);
+
+    scoreText = this.add.text(10, 10, '');
 
     // AUDIO
     bop[0] = this.sound.add("bop", { loop: false });
@@ -177,6 +182,7 @@ class playGame extends Phaser.Scene
   gameover()
   {
     ohno.play();
+    localStorage.setItem(localStorageName, Math.max(score, topscore));
     this.scene.start('PlayGame');
   }
 
@@ -215,6 +221,6 @@ class playGame extends Phaser.Scene
   updateScore(inc)
   {
     score += inc;
-    scoreText.text = "Score: " + score;
+    scoreText.text = 'Score: ' + score + '\nTop-Score: ' + topscore;
   }
 }
