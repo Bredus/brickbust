@@ -35,10 +35,11 @@ let blocks = {
 let keys;
 
 // TEXT
-let score;
-let scoreText;
+let score = 0;
 let topscore;
-let topscoreText;
+let txtScore;
+let txtTopScore;
+let txtAlert
 
 // AUDIO
 let bop = [];
@@ -99,14 +100,16 @@ class playGame extends Phaser.Scene
       })
 
       this.physics.add.overlap(ball, blocks.group[this.i], this.destroyBlock, null, this);
-
     }
     
     // TEXT / SCORE
-    score = 0;
+    //score = 0;
     topscore = localStorage.getItem(localStorageName) == null ? 0 : localStorage.getItem(localStorageName);
 
-    scoreText = this.add.text(10, 10, '');
+    txtScore = this.add.text(10, 10, '');
+
+    txtAlert = this.add.text(148, 300, 'PRESS SPACE');
+    
 
     // AUDIO
     bop[0] = this.sound.add("bop", { loop: false });
@@ -136,6 +139,7 @@ class playGame extends Phaser.Scene
     {
         if (keys.space.isDown)
         {
+          txtAlert.text = '';
           isBallMoving = true;
           ball.setVelocityY(200);
         }
@@ -183,6 +187,7 @@ class playGame extends Phaser.Scene
   {
     ohno.play();
     localStorage.setItem(localStorageName, Math.max(score, topscore));
+    score = 0;
     this.scene.start('PlayGame');
   }
 
@@ -221,6 +226,6 @@ class playGame extends Phaser.Scene
   updateScore(inc)
   {
     score += inc;
-    scoreText.text = 'Score: ' + score + '\nTop-Score: ' + topscore;
+    txtScore.text = 'Score: ' + score + '\nTop-Score: ' + topscore;
   }
 }
